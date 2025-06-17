@@ -68,18 +68,19 @@ inputs = {
   identifier = "${include.root.locals.common_prefix}-db-01"
 
   engine               = "postgres"
-  engine_version       = "15.4"
+  engine_version       = "17.2"
   instance_class       = "db.t4g.micro"
-  family               = "postgres15"
+  family               = "postgres17"
   allocated_storage    = 20
   storage_encrypted    = true
   publicly_accessible  = false
 
   vpc_security_group_ids = [dependency.sg.outputs.security_group_id]
+  create_db_subnet_group = true
   subnet_ids             = dependency.vpc.outputs.private_subnets
 
-  db_name  = "spring-db"
-  username = "admin"
+  db_name  = "springdb"
+  username = "springadmin"
   password = dependency.root_password.outputs.result
   port     = 5432
 

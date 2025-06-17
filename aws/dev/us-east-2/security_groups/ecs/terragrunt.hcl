@@ -78,10 +78,10 @@ inputs = {
 
   egress_with_cidr_blocks = [
     {
-      from_port   = 0
-      to_port     = 0
-      protocol    = "-1"
-      cidr_blocks = "0.0.0.0/0"
+      from_port   = 5432
+      to_port     = 5432
+      protocol    = "tcp"
+      cidr_blocks = "10.0.0.0/16"
     },
     # Docker Hub ranges to pull Nginx image
     {
