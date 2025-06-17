@@ -20,7 +20,7 @@ include "root" {
 # Include the envcommon configuration for the component. The envcommon configuration contains settings that are common
 # for the component across all environments.
 include "envcommon" {
-  path   = find_in_parent_folders("_env/vpc.hcl")
+  path   = find_in_parent_folders("_env/security_groups.hcl")
   expose = true
 }
 
@@ -82,6 +82,19 @@ inputs = {
       to_port     = 0
       protocol    = "-1"
       cidr_blocks = "0.0.0.0/0"
+    },
+    # Docker Hub ranges to pull Nginx image
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = "44.208.0.0/16"
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = "34.194.0.0/16"
     }
   ]
 

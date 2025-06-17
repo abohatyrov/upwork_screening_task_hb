@@ -20,7 +20,7 @@ include "root" {
 # Include the envcommon configuration for the component. The envcommon configuration contains settings that are common
 # for the component across all environments.
 include "envcommon" {
-  path   = find_in_parent_folders("_env/ecs.hcl")
+  path   = find_in_parent_folders("_env/cw_alerts.hcl")
   expose = true
 }
 
@@ -28,35 +28,11 @@ include "envcommon" {
 # Dependencies
 # ---------------------------------------------------------------------------------------------------------------------
 
-dependency "vpc" {
-  config_path = find_in_parent_folders("vpc")
+dependency "ecs_service" {
+  config_path = find_in_parent_folders("ecs")
 
   mock_outputs = {
-    vpc_id         = "vpc-xxxxxxxxxxxxxxxxxxxx"
-    private_subnets = [
-      "subnet-xxxxxxxxxxxxxxxxxxxx",
-      "subnet-xxxxxxxxxxxxxxxxxxxx"
-    ]
-  }
-}
-
-dependency "sg" {
-  config_path = find_in_parent_folders("security_groups/ecs")
-
-  mock_outputs = {
-    security_group_id = "sg-xxxxxxxxxxxxxxxxxxxx"
-  }
-}
-
-dependency "alb" {
-  config_path = find_in_parent_folders("alb")
-
-  mock_outputs = {
-    target_groups = {
-      ex-target = {
-        arn = "arn:aws:test::test-target-group"
-      }
-    }
+    cluster_name = "cluster-name"
   }
 }
 
@@ -69,53 +45,19 @@ dependency "alb" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 inputs = {
-  name         = "${include.root.locals.common_prefix}-ecs-01"
-  cluster_name = "${include.root.locals.common_prefix}-cluster-01"
-  create_cluster = true
-
-  services = {
-    nginx = {
-      cpu               = 256
-      memory            = 512
-      desired_count     = 1
-      subnet_ids        = dependency.vpc.outputs.private_subnets
-      security_groups   = [dependency.sg.outputs.security_group_id]
-      assign_public_ip  = false
-
-      load_balancer = {
-        service = {
-          target_group_arn = dependency.alb.outputs.target_groups["ex-target"].arn
-          container_name   = "nginx"
-          container_port   = 80
-        }
-      }
-
-      container_definitions = [
-        {
-          name      = "nginx"
-          image     = "nginx:latest"
-          cpu       = 256
-          memory    = 512
-          essential = true
-          port_mappings = [
-            {
-              containerPort = 80
-              hostPort      = 80
-              protocol      = "tcp"
-            }
-          ]
-          log_configuration = {
-            log_driver = "awslogs"
-            options = {
-              awslogs-group         = "/ecs/nginx"
-              awslogs-region        = include.root.locals.aws_region
-              awslogs-stream-prefix = "ecs"
-            }
-          }
-        }
-      ]
-    }
+  alarm_name          = "HighCPUUtilization"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_description   = "Triggered when ECS CPU > 70%"
+  dimensions = {
+    ClusterName = dependency.ecs_service.outputs.cluster_name
   }
+  treat_missing_data = "missing"
 
   tags = include.root.locals.tags
 }

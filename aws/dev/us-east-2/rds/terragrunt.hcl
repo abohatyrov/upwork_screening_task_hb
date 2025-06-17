@@ -83,7 +83,7 @@ inputs = {
   password = dependency.root_password.outputs.result
   port     = 5432
 
-  multi_az               = false
+  multi_az                = true
   backup_retention_period = 7
   skip_final_snapshot     = true
 
